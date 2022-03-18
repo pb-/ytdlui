@@ -1,0 +1,17 @@
+{:deps
+ {org.clojure/clojure {:mvn/version "1.10.3"}
+  org.clojure/java.jdbc {:mvn/version "0.7.12"}
+  ring/ring-core {:mvn/version "1.9.4"}
+  ring/ring-jetty-adapter {:mvn/version "1.9.4"}
+  compojure/compojure {:mvn/version "1.6.2"}
+  hiccup/hiccup {:mvn/version "1.0.5"}
+  org.xerial/sqlite-jdbc {:mvn/version "3.36.0.3"}}
+ :paths ["src" "resources"]
+ :aliases {:nrepl
+           {:extra-deps
+            {cider/cider-nrepl {:mvn/version "0.26.0"}
+             ring/ring-devel {:mvn/version "1.9.4"}}
+            :main-opts ["-m" "nrepl.cmdline" "--middleware" "[cider.nrepl/cider-middleware]"]}
+           :build
+           {:deps {io.github.clojure/tools.build {:tag "v0.7.5" :sha "34727f7"}}
+            :ns-default build}}}
