@@ -6,6 +6,8 @@
             [ring.adapter.jetty :refer [run-jetty]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.resource :refer [wrap-resource]]
+            [ring.middleware.content-type :refer [wrap-content-type]]
+            [ring.middleware.not-modified :refer [wrap-not-modified]]
             [compojure.core :refer [GET POST defroutes context]]
             [hiccup.page :refer [html5]]
             [hiccup.util :refer [escape-html]])
@@ -196,6 +198,8 @@
 (def app
   (-> routes
       (wrap-resource "public")
+      wrap-content-type
+      wrap-not-modified
       wrap-db
       wrap-params))
 
