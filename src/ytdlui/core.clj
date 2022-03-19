@@ -39,7 +39,17 @@
     {:title (some #(when (.startsWith % "title: ") (subs % 7)) lines)
      :filename (last lines)}))
 
-(defn download [url path]
+(defn url-encode' [s]
+  (string/join
+    (for [ub (.getBytes s)
+          :let [b (if (neg? ub) (+ 256 ub) ub)]]
+      (if (or (<= 48 b 57)
+              (<= 65 b 90)
+              (<= 97 b 122))
+        (char b)
+        (format "%%%02X" b)))))
+
+(defn download! [url path]
   (let [result (sh "bash" "-s" "-" url path :in (slurp (io/resource "dl.sh")))]
     (if (zero? (:exit result))
       (merge result (metadata (:out result)))
@@ -134,10 +144,12 @@
 (defn download-local [request]
   (let [job (get-job (:db request) (get-in request [:params :job-id]))]
     (if (and job (#{"done"} (:status job)))
-      {:status 200
-       :headers {"content-type" "application/octet-stream"
-                 "content-disposition" (str "attachment; filename=\"" (:filename job) "\"")}
-       :body (io/file (str downloads-path "/" (:filename job)))}
+      (let [file (io/file (str downloads-path "/" (:filename job)))]
+        {:status 200
+         :headers {"content-type" "application/octet-stream"
+                   "content-length" (str (.length file))
+                   "content-disposition" (str "attachment; filename*=UTF-8''" (url-encode' (:filename job)))}
+         :body file})
       (not-found))))
 
 (defn enqueue [request]
@@ -204,7 +216,7 @@
       wrap-params))
 
 (defn run-job [db job]
-  (let [result (download (:url job) downloads-path)]
+  (let [result (download! (:url job) downloads-path)]
     (if (zero? (:exit result))
       (job-success! db (now) (:job_id job) (:out result) (:title result) (:filename result))
       (job-failure! db (now) (:job_id job) (:out result) (:err result)))))
