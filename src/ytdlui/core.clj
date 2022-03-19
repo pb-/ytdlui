@@ -31,20 +31,21 @@
                   "error" "cancel"
                   "running" "cloud-download"})
 
+(def rfc-3986-unreserved "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~")
+
 (def version (slurp (io/resource "version")))
 
 (defn now []
   (quot (System/currentTimeMillis) 1000))
 
-(defn url-encode' [s]
-  (string/join
-    (for [ub (.getBytes s)
-          :let [b (if (neg? ub) (+ 256 ub) ub)]]
-      (if (or (<= 48 b 57)
-              (<= 65 b 90)
-              (<= 97 b 122))
-        (char b)
-        (format "%%%02X" b)))))
+(defn url-encode [s]
+  (let [unreserved (set (map int rfc-3986-unreserved))]
+    (string/join
+      (for [ub (.getBytes s)
+            :let [b (bit-and ub 0xff)]]
+        (if (unreserved b)
+          (char b)
+          (format "%%%02X" b))))))
 
 (defn metadata [log]
   (let [lines (string/split log #"\n")]
@@ -150,7 +151,7 @@
         {:status 200
          :headers {"content-type" "application/octet-stream"
                    "content-length" (str (.length file))
-                   "content-disposition" (str "attachment; filename*=UTF-8''" (url-encode' (:filename job)))}
+                   "content-disposition" (str "attachment; filename*=UTF-8''" (url-encode (:filename job)))}
          :body file})
       (not-found))))
 
