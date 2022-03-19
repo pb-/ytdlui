@@ -191,7 +191,7 @@
 (defroutes routes
   (GET "/" [] (wrap-html-content home))
   (POST "/" [] enqueue)
-  (GET ["/job/:job-id/download/:display-name" :job-id #"\d+"] [] download-local)
+  (GET ["/job/:job-id/download/:display-name" :job-id #"\d+" :display-name #".*"] [] download-local)
   (GET ["/job/:job-id/logs" :job-id #"\d+"] [] (wrap-html-content logs))
   not-found)
 
