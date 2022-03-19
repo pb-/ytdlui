@@ -31,6 +31,8 @@
                   "error" "cancel"
                   "running" "cloud-download"})
 
+(def version (slurp (io/resource "version")))
+
 (defn now []
   (quot (System/currentTimeMillis) 1000))
 
@@ -74,7 +76,11 @@
                       :content "width=device-width, initial-scale=1"}]]
              [:body
               {:style "max-width: 30em; padding: 0.75em; margin: auto;"}
-              (handler request)])}))
+              (handler request)]
+             [:p
+              {:style "font-size: smaller; color: gray;"}
+              "Running " [:a {:href "https://github.com/pb-/ytdlui"
+                              :style "text-decoration: underline;"} "ytdlui"] " " version])}))
 
 (defn logs [request]
   (let [job (store/get-job (:db request) (get-in request [:params :job-id]))]

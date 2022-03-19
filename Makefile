@@ -11,7 +11,7 @@ run: data
 .PHONY: run
 
 image:
-	docker build -t ytdlui .
+	docker build --build-arg version=$(shell git describe --dirty --always) -t ytdlui .
 .PHONY: image
 
 publish:

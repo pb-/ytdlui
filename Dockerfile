@@ -1,4 +1,5 @@
 FROM clojure:tools-deps-1.10.3.1058 AS builder
+ARG version=UNKNOWN
 
 RUN mkdir -p /build
 WORKDIR /build
@@ -11,6 +12,8 @@ RUN clojure -P -T:build
 COPY build.clj /build
 COPY src src/
 COPY resources resources/
+
+RUN echo "$version" > resources/version
 
 RUN clojure -T:build uber
 
