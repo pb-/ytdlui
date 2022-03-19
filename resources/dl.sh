@@ -17,7 +17,7 @@ trap "rm -rf $WORKDIR" EXIT
 pushd "$WORKDIR" > /dev/null
 
 python3 -m venv e
-e/bin/pip --no-color --disable-pip-version-check install --progress-bar=off yt-dlp
+e/bin/pip --no-color --no-cache-dir --disable-pip-version-check install --progress-bar=off yt-dlp
 e/bin/yt-dlp -x --audio-quality=0 --no-simulate -O 'id: %(id)s' -O 'title: %(title)s' -O 'original_url: %(original_url)s' --exec echo --newline --no-colors "$URL" | tee log
 
 OUTFILE=$(tail -n 1 log)
