@@ -24,7 +24,9 @@ VOLUME /app/data
 EXPOSE 8080/tcp
 
 ENV STORAGE_PATH=/app/data
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
 
 COPY --from=builder /build/target/ytdlui.jar /app/main.jar
 
-ENTRYPOINT ["java", "-cp", "main.jar", "clojure.main", "-m", "ytdlui.core"]
+ENTRYPOINT ["java", "-Dfile.encoding=UTF8", "-cp", "main.jar", "clojure.main", "-m", "ytdlui.core"]
