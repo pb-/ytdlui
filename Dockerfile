@@ -1,5 +1,4 @@
 FROM clojure:tools-deps-1.10.3.1058 AS builder
-ARG version=UNKNOWN
 
 RUN mkdir -p /build
 WORKDIR /build
@@ -13,11 +12,12 @@ COPY build.clj /build
 COPY src src/
 COPY resources resources/
 
+ARG version=UNKNOWN
 RUN echo "$version" > resources/version
 
 RUN clojure -T:build uber
 
-
+# ======================================================================================
 FROM debian:11.2-slim
 
 RUN apt-get update && apt-get install -y python3 python3-venv openjdk-17-jre-headless ffmpeg
