@@ -8,10 +8,10 @@
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.middleware.content-type :refer [wrap-content-type]]
             [ring.middleware.not-modified :refer [wrap-not-modified]]
-            [compojure.core :refer [GET POST defroutes context]]
+            [compojure.core :refer [GET POST defroutes]]
             [hiccup.page :refer [html5]]
-            [hiccup.util :refer [escape-html]])
-  (:import [org.sqlite SQLiteException SQLiteErrorCode]))
+            [hiccup.util :refer [escape-html]]
+            [ytdlui.store :as store]))
 
 (def storage-path (System/getenv "STORAGE_PATH"))
 (def db-path (str storage-path "/db"))
@@ -34,11 +34,6 @@
 (defn now []
   (quot (System/currentTimeMillis) 1000))
 
-(defn metadata [log]
-  (let [lines (string/split log #"\n")]
-    {:title (some #(when (.startsWith % "title: ") (subs % 7)) lines)
-     :filename (last lines)}))
-
 (defn url-encode' [s]
   (string/join
     (for [ub (.getBytes s)
@@ -49,56 +44,16 @@
         (char b)
         (format "%%%02X" b)))))
 
+(defn metadata [log]
+  (let [lines (string/split log #"\n")]
+    {:title (some #(when (.startsWith % "title: ") (subs % 7)) lines)
+     :filename (last lines)}))
+
 (defn download! [url path]
   (let [result (sh "bash" "-s" "-" url path :in (slurp (io/resource "dl.sh")))]
     (if (zero? (:exit result))
       (merge result (metadata (:out result)))
       result)))
-
-(defn enqueue-job! [db url timestamp]
-  (try
-    (jdbc/insert! db :job {:created_at timestamp
-                           :url url
-                           :status "pending"})
-    (catch SQLiteException e
-      (when (not= (.getResultCode e) SQLiteErrorCode/SQLITE_CONSTRAINT_UNIQUE)
-        (throw e)))))
-
-(defn claim-job! [db timestamp]
-  (first
-    (jdbc/query db ["UPDATE job SET
-                    status = 'running',
-                    attempts = attempts + 1,
-                    updated_at = ?
-                    WHERE job_id IN (
-                    SELECT job_id FROM job WHERE status = 'pending' LIMIT 1)
-                    RETURNING *" timestamp])))
-
-(defn job-success! [db timestamp job-id stdout title filename]
-  (jdbc/execute! db ["UPDATE job SET
-                     status = 'done',
-                     updated_at = ?,
-                     stdout = ?,
-                     title = ?,
-                     filename = ?
-                     WHERE job_id = ?" timestamp stdout title filename job-id]))
-
-(defn job-failure! [db timestamp job-id stdout stderr]
-  (jdbc/execute! db ["UPDATE job SET
-                     status = 'error',
-                     updated_at = ?,
-                     stdout = ?,
-                     stderr = ?
-                     WHERE job_id = ?" timestamp stdout stderr job-id]))
-
-(defn list-jobs [db]
-  (jdbc/query db "SELECT * FROM job ORDER BY created_at DESC"))
-
-(defn get-job [db job-id]
-  (first (jdbc/query db ["SELECT * FROM job WHERE job_id = ?" job-id])))
-
-(defn working? [db]
-  (pos? (second (first (jdbc/query db "SELECT EXISTS (SELECT job_id FROM job WHERE status IN ('pending', 'running'))" {:result-set-fn first})))))
 
 (defn not-found [& request]
   {:status 404
@@ -112,7 +67,7 @@
              [:head
               [:link {:rel "stylesheet" :href "/assets/pure-min.css"}]
               [:link {:rel "stylesheet" :href "/assets/local.css"}]
-              (when (working? (:db request))
+              (when (store/working? (:db request))
                 [:meta {:http-equiv "refresh"
                         :content "2"}])
               [:meta {:name "viewport"
@@ -121,13 +76,8 @@
               {:style "max-width: 30em; padding: 0.75em; margin: auto;"}
               (handler request)])}))
 
-(defn wrap-db [handler]
-  (fn [request]
-    (jdbc/with-db-connection [db db-spec]
-      (handler (assoc request :db db)))))
-
 (defn logs [request]
-  (let [job (get-job (:db request) (get-in request [:params :job-id]))]
+  (let [job (store/get-job (:db request) (get-in request [:params :job-id]))]
     [:div
      (when (seq (:stderr job))
        [:div
@@ -140,24 +90,6 @@
       [:pre
        {:style "overflow-x: auto; background-color: whitesmoke; padding: .5em;"}
        (:stdout job)]]]))
-
-(defn download-local [request]
-  (let [job (get-job (:db request) (get-in request [:params :job-id]))]
-    (if (and job (#{"done"} (:status job)))
-      (let [file (io/file (str downloads-path "/" (:filename job)))]
-        {:status 200
-         :headers {"content-type" "application/octet-stream"
-                   "content-length" (str (.length file))
-                   "content-disposition" (str "attachment; filename*=UTF-8''" (url-encode' (:filename job)))}
-         :body file})
-      (not-found))))
-
-(defn enqueue [request]
-  (let [url (get-in request [:form-params "url"])]
-    (when (re-matches #"https://.*" url)
-      (enqueue-job! (:db request) url (now)))
-    {:status 302
-     :headers {"location" "/"}}))
 
 (defn home [request]
   [:div
@@ -174,7 +106,7 @@
       {:type "submit"
        :value "Get"}]]]
    [:div
-    (for [job (list-jobs (:db request))]
+    (for [job (store/list-jobs (:db request))]
       [:div
        {:style "padding: 1em 0"}
        [:div
@@ -200,6 +132,29 @@
             {:style "display: flex; align-items: center; gap: .2em"}
             [:img {:src "assets/icons/download.svg"}] "Download"]])]])]])
 
+(defn wrap-db [handler]
+  (fn [request]
+    (jdbc/with-db-connection [db db-spec]
+      (handler (assoc request :db db)))))
+
+(defn download-local [request]
+  (let [job (store/get-job (:db request) (get-in request [:params :job-id]))]
+    (if (and job (#{"done"} (:status job)))
+      (let [file (io/file (str downloads-path "/" (:filename job)))]
+        {:status 200
+         :headers {"content-type" "application/octet-stream"
+                   "content-length" (str (.length file))
+                   "content-disposition" (str "attachment; filename*=UTF-8''" (url-encode' (:filename job)))}
+         :body file})
+      (not-found))))
+
+(defn enqueue [request]
+  (let [url (get-in request [:form-params "url"])]
+    (when (re-matches #"https://.*" url)
+      (store/enqueue-job! (:db request) url (now)))
+    {:status 302
+     :headers {"location" "/"}}))
+
 (defroutes routes
   (GET "/" [] (wrap-html-content home))
   (POST "/" [] enqueue)
@@ -218,13 +173,15 @@
 (defn run-job [db job]
   (let [result (download! (:url job) downloads-path)]
     (if (zero? (:exit result))
-      (job-success! db (now) (:job_id job) (:out result) (:title result) (:filename result))
-      (job-failure! db (now) (:job_id job) (:out result) (:err result)))))
+      (store/job-success!
+        db (now) (:job_id job) (:out result) (:title result) (:filename result))
+      (store/job-failure!
+        db (now) (:job_id job) (:out result) (:err result)))))
 
 (defn worker []
   (jdbc/with-db-connection [db db-spec]
     (while true
-      (if-let [job (claim-job! db (now))]
+      (if-let [job (store/claim-job! db (now))]
         (run-job db job)
         (Thread/sleep 3000)))))
 
