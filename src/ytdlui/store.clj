@@ -38,6 +38,13 @@
                      stderr = ?
                      WHERE job_id = ?" timestamp stdout stderr job-id]))
 
+(defn job-exception! [db timestamp job-id exception]
+  (jdbc/execute! db ["UPDATE job SET
+                     status = 'error',
+                     updated_at = ?,
+                     exception = ?
+                     WHERE job_id = ?" timestamp exception job-id]))
+
 (defn list-jobs [db]
   (jdbc/query db "SELECT * FROM job ORDER BY created_at DESC"))
 

@@ -3,6 +3,7 @@
             [clojure.string :as string]
             [clojure.java.shell :refer [sh]]
             [clojure.java.jdbc :as jdbc]
+            [clojure.stacktrace :refer [print-stack-trace]]
             [ring.adapter.jetty :refer [run-jetty]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.resource :refer [wrap-resource]]
@@ -86,17 +87,24 @@
 (defn logs [request]
   (let [job (store/get-job (:db request) (get-in request [:params :job-id]))]
     [:div
+     (when (seq (:exception job))
+       [:div
+        [:h2 "Stack trace"]
+        [:pre
+         {:style "overflow-x: auto; color: firebrick; background-color: mistyrose; padding: .5em;"}
+         (:exception job)]])
      (when (seq (:stderr job))
        [:div
         [:h2 "stderr"]
         [:pre
          {:style "overflow-x: auto; color: firebrick; background-color: mistyrose; padding: .5em;"}
          (:stderr job)]])
-     [:div
-      [:h2 "stdout"]
-      [:pre
-       {:style "overflow-x: auto; background-color: whitesmoke; padding: .5em;"}
-       (:stdout job)]]]))
+     (when (seq (:stdout job))
+       [:div
+        [:h2 "stdout"]
+        [:pre
+         {:style "overflow-x: auto; background-color: whitesmoke; padding: .5em;"}
+         (:stdout job)]])]))
 
 (defn home [request]
   [:div
@@ -126,7 +134,7 @@
         [:div [:a {:href (:url job)} (or (:title job) (:url job))]]]
        [:div
         {:style "display: flex; gap: 1.5em; justify-content: flex-end; margin-top: .75em;"}
-        (when (or (:stdout job) (:stderr job))
+        (when (or (:stdout job) (:stderr job) (:exception job))
           [:a
            {:href (format "/job/%d/logs" (:job_id job))}
            [:div
@@ -178,12 +186,16 @@
       wrap-params))
 
 (defn run-job [db job]
-  (let [result (download! (:url job) downloads-path)]
-    (if (zero? (:exit result))
-      (store/job-success!
-        db (now) (:job_id job) (:out result) (:title result) (:filename result))
-      (store/job-failure!
-        db (now) (:job_id job) (:out result) (:err result)))))
+  (try
+    (let [result (download! (:url job) downloads-path)]
+      (if (zero? (:exit result))
+        (store/job-success!
+          db (now) (:job_id job) (:out result) (:title result) (:filename result))
+        (store/job-failure!
+          db (now) (:job_id job) (:out result) (:err result))))
+    (catch Throwable tr
+      (store/job-exception!
+        db (now) (:job_id job) (with-out-str (print-stack-trace tr))))))
 
 (defn worker []
   (jdbc/with-db-connection [db db-spec]
