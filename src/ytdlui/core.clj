@@ -108,26 +108,26 @@
    [:div
     (for [job (store/list-jobs (:db request))]
       [:div
-       {:style "padding: 1em 0"}
+       {:style "padding: 1em 0;"}
        [:div
         {:style "display: flex; align-items: flex-start; gap: 1em;"}
         [:div
          {:style (format "background-color: %s; padding: 0.5em; border-radius: 3em;" (status-color (:status job)))}
          [:img {:style "vertical-align: middle;"
                 :title (string/capitalize (:status job))
-                :src (str "assets/icons/" (status-icon (:status job)) ".svg")}]]
+                :src (format "assets/icons/%s.svg" (status-icon (:status job)))}]]
         [:div [:a {:href (:url job)} (or (:title job) (:url job))]]]
        [:div
         {:style "display: flex; gap: 1.5em; justify-content: flex-end; margin-top: .75em;"}
         (when (or (:stdout job) (:stderr job))
           [:a
-           {:href (str "/job/" (:job_id job) "/logs")}
+           {:href (format "/job/%d/logs" (:job_id job))}
            [:div
             {:style "display: flex; align-items: center; gap: .2em;"}
             [:img {:src "assets/icons/page-flip.svg"}] "Logs"]])
         (when (#{"done"} (:status job))
           [:a
-           {:href (str "/job/" (:job_id job) "/download/" (escape-html (:filename job)))} 
+           {:href (format "/job/%d/download/%s" (:job_id job) (escape-html (:filename job)))} 
            [:div
             {:style "display: flex; align-items: center; gap: .2em"}
             [:img {:src "assets/icons/download.svg"}] "Download"]])]])]])
