@@ -1,3 +1,9 @@
+body {
+    max-width: 30em;
+    padding: 0.75em;
+    margin: auto;
+}
+
 a {
     text-decoration: unset;
     color: unset;
@@ -9,5 +15,62 @@ img {
 }
 
 pre {
+    overflow-x: auto;
+    padding: 0.5em;
     font-size: x-small;
+    background-color: whitesmoke;
+}
+
+pre.error {
+    color: firebrick;
+    background-color: lavenderblush;
+}
+
+.footer {
+    font-size: smaller;
+    color: gray;
+}
+
+.input-form {
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1em;
+}
+
+.query {
+    margin: 0;
+}
+
+.job-container {
+    padding: 1em 0;
+}
+
+.job-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 1em;
+}
+
+.job-status-icon {
+    padding: 0.5em;
+    border-radius: 3em;
+}
+
+.job-status-img {
+    vertical-align: middle;
+}
+
+.job-actions {
+    display: flex;
+    gap: 1.5em;
+    justify-content: flex-end;
+    margin-top: .75em;
+}
+
+.job-action {
+    display: flex;
+    align-items: center;
+    gap: .2em;
 }

@@ -69,18 +69,15 @@
      :headers {"content-type" "text/html; charset=utf-8"}
      :body (html5
              [:head
-              [:link {:rel "stylesheet" :href "/assets/pure-min.css"}]
-              [:link {:rel "stylesheet" :href "/assets/local.css"}]
+              [:link {:rel "stylesheet" :href (format "/assets/pure-min.css?v=%s" version)}]
+              [:link {:rel "stylesheet" :href (format "/assets/local.css?v=%s" version)}]
               (when (store/working? (:db request))
                 [:meta {:http-equiv "refresh"
                         :content "2"}])
               [:meta {:name "viewport"
                       :content "width=device-width, initial-scale=1"}]]
-             [:body
-              {:style "max-width: 30em; padding: 0.75em; margin: auto;"}
-              (handler request)]
-             [:p
-              {:style "font-size: smaller; color: gray;"}
+             [:body (handler request)]
+             [:p.footer
               "Running " [:a {:href "https://github.com/pb-/ytdlui"
                               :style "text-decoration: underline;"} "ytdlui"] " " version])}))
 
@@ -90,61 +87,44 @@
      (when (seq (:exception job))
        [:div
         [:h2 "Stack trace"]
-        [:pre
-         {:style "overflow-x: auto; color: firebrick; background-color: mistyrose; padding: .5em;"}
-         (:exception job)]])
+        [:pre.error (:exception job)]])
      (when (seq (:stderr job))
        [:div
         [:h2 "stderr"]
-        [:pre
-         {:style "overflow-x: auto; color: firebrick; background-color: mistyrose; padding: .5em;"}
-         (:stderr job)]])
+        [:pre.error (:stderr job)]])
      (when (seq (:stdout job))
        [:div
         [:h2 "stdout"]
-        [:pre
-         {:style "overflow-x: auto; background-color: whitesmoke; padding: .5em;"}
-         (:stdout job)]])]))
+        [:pre (:stdout job)]])]))
 
 (defn home [request]
   [:div
    [:form.pure-form
-    {:method "post"
-     :action ""}
-    [:div
-     {:style "display: flex; gap: .5em; align-items: center; justify-content: center; margin-bottom: 1em;"}
-     [:input {:type "text"
-              :style "margin: 0;"
-              :placeholder "YouTube/SoundCloud/… URL"
-              :name "url"}]
-     [:input.pure-button.pure-button-primary
-      {:type "submit"
-       :value "Get"}]]]
+    {:method "post" :action ""}
+    [:div.input-form
+     [:input.query {:type "text"
+                    :placeholder "YouTube/SoundCloud/… URL"
+                    :name "url"}]
+     [:input.pure-button.pure-button-primary {:type "submit" :value "Get"}]]]
    [:div
     (for [job (store/list-jobs (:db request))]
-      [:div
-       {:style "padding: 1em 0;"}
-       [:div
-        {:style "display: flex; align-items: flex-start; gap: 1em;"}
-        [:div
-         {:style (format "background-color: %s; padding: 0.5em; border-radius: 3em;" (status-color (:status job)))}
-         [:img {:style "vertical-align: middle;"
-                :title (string/capitalize (:status job))
-                :src (format "assets/icons/%s.svg" (status-icon (:status job)))}]]
+      [:div.job-container
+       [:div.job-head
+        [:div.job-status-icon
+         {:style (format "background-color: %s;" (status-color (:status job)))}
+         [:img.job-status-img {:title (string/capitalize (:status job))
+                               :src (format "/assets/icons/%s.svg" (status-icon (:status job)))}]]
         [:div [:a {:href (:url job)} (or (:title job) (:url job))]]]
-       [:div
-        {:style "display: flex; gap: 1.5em; justify-content: flex-end; margin-top: .75em;"}
+       [:div.job-actions
         (when (or (:stdout job) (:stderr job) (:exception job))
           [:a
            {:href (format "/job/%d/logs" (:job_id job))}
-           [:div
-            {:style "display: flex; align-items: center; gap: .2em;"}
+           [:div.job-action
             [:img {:src "assets/icons/page-flip.svg"}] "Logs"]])
         (when (#{"done"} (:status job))
           [:a
            {:href (format "/job/%d/download/%s" (:job_id job) (escape-html (:filename job)))} 
-           [:div
-            {:style "display: flex; align-items: center; gap: .2em"}
+           [:div.job-action
             [:img {:src "assets/icons/download.svg"}] "Download"]])]])]])
 
 (defn wrap-db [handler]
