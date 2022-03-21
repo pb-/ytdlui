@@ -18,6 +18,7 @@
 (defn page [body version refresh?]
   (html5
     [:head
+     [:title "Get 🎶︎"]
      [:link {:rel "stylesheet" :href (format "/assets/local.css?v=%s" version)}]
      (when refresh?
        [:meta {:http-equiv "refresh"
