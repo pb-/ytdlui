@@ -18,7 +18,6 @@
 (defn page [body version refresh?]
   (html5
     [:head
-     [:link {:rel "stylesheet" :href (format "/assets/pure-min.css?v=%s" version)}]
      [:link {:rel "stylesheet" :href (format "/assets/local.css?v=%s" version)}]
      (when refresh?
        [:meta {:http-equiv "refresh"
@@ -47,13 +46,14 @@
 
 (defn home [jobs]
   [:div
-   [:form.pure-form
+   [:p.hint "Enter a YouTube/SoundCloud/… URL to extract the audio track from it."]
+   [:form
     {:method "post" :action ""}
     [:div.input-form
      [:input.query {:type "text"
                     :placeholder "YouTube/SoundCloud/… URL"
                     :name "url"}]
-     [:input.pure-button.pure-button-primary {:type "submit" :value "Get"}]]]
+     [:input {:type "submit" :value "Get 🎶︎"}]]]
    [:div
     (for [job jobs]
       [:div.job-container
