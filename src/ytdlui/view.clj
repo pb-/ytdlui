@@ -25,10 +25,9 @@
                :content "2"}])
      [:meta {:name "viewport"
              :content "width=device-width, initial-scale=1"}]]
-    [:body body]
-    [:p.footer
-     "Running " [:a {:href "https://github.com/pb-/ytdlui"
-                     :style "text-decoration: underline;"} "ytdlui"] " " version]))
+    [:body body
+     [:p.footer
+      "Running " [:a {:href "https://github.com/pb-/ytdlui"} "ytdlui"] " " version]]))
 
 (defn logs [job]
   [:div

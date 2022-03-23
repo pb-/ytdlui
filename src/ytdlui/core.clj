@@ -133,7 +133,7 @@
 
 (comment
   ;; evaluate this to start the development server
-  (start-worker)
   (do
+    (start-worker)
     (require '[ring.middleware.reload :refer [wrap-reload]])
     (run-jetty (wrap-reload #'app) {:port 4711 :join? false})))
