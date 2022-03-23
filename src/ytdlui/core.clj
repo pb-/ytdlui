@@ -85,14 +85,26 @@
 
 (defn enqueue [request]
   (let [url (get-in request [:form-params "url"])]
-    (when (re-matches #"https://.*" url)
+    (when (and url (re-matches #"https://.*" url))
       (store/enqueue-job! (:db request) url (now)))
     {:status 302
      :headers {"location" "/"}}))
 
+(defn retry [request]
+  (when-let [job-id (get-in request [:form-params "job-id"])]
+    (store/retry-job! (:db request) (now) job-id))
+  {:status 302
+   :headers {"location" "/"}})
+
+(defn dispatch-mutation [request]
+  (case (get-in request [:form-params "action"])
+    "enqueue" enqueue
+    "retry" retry
+    not-found))
+
 (defroutes routes
   (GET "/" [] (wrap-html-content home))
-  (POST "/" [] enqueue)
+  (POST "/" [] dispatch-mutation)
   (GET ["/job/:job-id/download/:display-name" :job-id #"\d+" :display-name #".*"] [] download-local)
   (GET ["/job/:job-id/logs" :job-id #"\d+"] [] (wrap-html-content logs))
   not-found)

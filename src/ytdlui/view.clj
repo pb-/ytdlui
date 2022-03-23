@@ -50,6 +50,7 @@
    [:form
     {:method "post" :action ""}
     [:div.input-form
+     [:input {:type "hidden" :name "action" :value "enqueue"}]
      [:input.query {:type "text"
                     :placeholder "YouTube/SoundCloud/… URL"
                     :name "url"}]
@@ -73,4 +74,13 @@
           [:a
            {:href (format "/job/%d/download/%s" (:job_id job) (escape-html (:filename job)))}
            [:div.job-action
-            [:img {:src "assets/icons/download.svg"}] "Download"]])]])]])
+            [:img {:src "assets/icons/download.svg"}] "Download"]])
+        (when (#{"error"} (:status job))
+          [:form
+           {:method "post" :action ""}
+           [:input {:type "hidden" :name "action" :value "retry"}]
+           [:input {:type "hidden" :name "job-id" :value (:job_id job)}]
+           [:button
+            {:type "submit"}
+            [:div.job-action
+             [:img {:src "assets/icons/refresh.svg"}] "Retry"]]])]])]])

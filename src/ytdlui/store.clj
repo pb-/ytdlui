@@ -45,6 +45,15 @@
                      exception = ?
                      WHERE job_id = ?" timestamp exception job-id]))
 
+(defn retry-job! [db timestamp job-id]
+  (jdbc/execute! db ["UPDATE job SET
+                     status = 'pending',
+                     stdout = NULL,
+                     stderr = NULL,
+                     exception = NULL,
+                     updated_at = ?
+                     WHERE status = 'error' AND job_id = ?" timestamp job-id]))
+
 (defn list-jobs [db]
   (jdbc/query db "SELECT * FROM job ORDER BY created_at DESC"))
 

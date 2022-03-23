@@ -40,6 +40,14 @@ input[type=submit] {
     border: none;
 }
 
+button {
+    padding: unset;
+    border: unset;
+    font-size: unset;
+    background-color: unset;
+    cursor: pointer;
+}
+
 .footer, .hint {
     font-size: smaller;
     color: gray;
