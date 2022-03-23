@@ -76,9 +76,8 @@ input[type=submit] {
     border-radius: 3em;
 }
 
-.job-status-icon svg {
+.job-status-img {
     vertical-align: middle;
-    color: white;
 }
 
 .job-actions {
