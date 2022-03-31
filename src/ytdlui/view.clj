@@ -1,7 +1,6 @@
 (ns ytdlui.view
   (:require [clojure.string :as string]
-            [hiccup.page :refer [html5]]
-            [hiccup.util :refer [escape-html]]))
+            [hiccup.page :refer [html5]]))
 
 (def ^:private status-color
   {"pending" "gray"
@@ -72,7 +71,7 @@
             [:img {:src "assets/icons/page-flip.svg"}] "Logs"]])
         (when (#{"done"} (:status job))
           [:a
-           {:href (format "/job/%d/download/%s" (:job_id job) (escape-html (:filename job)))}
+           {:href (format "/job/%d/download/%s" (:job_id job) (:filename job))}
            [:div.job-action
             [:img {:src "assets/icons/download.svg"}] "Download"]])
         (when (#{"error"} (:status job))
