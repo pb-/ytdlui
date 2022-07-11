@@ -11,6 +11,12 @@ fi
 URL="$1"
 OUTPUT_PATH="$2"
 
+if [[ "$URL" =~ soundcloud\.com/[^/]*/sets ]]
+then
+    >&2 echo "$0: downloading entire playlists is not supported yet"
+    exit 1
+fi
+
 WORKDIR=$(mktemp -d)
 trap "rm -rf $WORKDIR" EXIT
 
