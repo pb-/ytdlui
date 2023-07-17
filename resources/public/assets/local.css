@@ -73,6 +73,10 @@ button {
     padding: 1em 0;
 }
 
+.job-container:target {
+    background-color: deepskyblue;
+} 
+
 .job-head {
     display: flex;
     align-items: flex-start;
