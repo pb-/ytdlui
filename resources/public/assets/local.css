@@ -74,7 +74,8 @@ button {
 }
 
 .job-container:target {
-    background-color: deepskyblue;
+    background-color: lemonchiffon;
+    transition: background-color .2s ease-in;
 } 
 
 .job-head {
