@@ -70,7 +70,8 @@ button {
 }
 
 .job-container {
-    padding: 1em 0;
+    padding: 1em;
+    border-radius: 1em;
 }
 
 .job-container:target {
