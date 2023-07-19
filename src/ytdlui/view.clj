@@ -69,7 +69,7 @@
           [:a
            {:href (format "/#job-%s" (:job_id job))}
            [:div.job-action
-            [ :span "🔗 Link"]]])
+            [:img {:src "assets/icons/link.svg"}] "Link"]])
         (when (or (:stdout job) (:stderr job) (:exception job))
           [:a
            {:href (format "/job/%d/logs" (:job_id job))}
