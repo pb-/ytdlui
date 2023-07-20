@@ -70,8 +70,14 @@ button {
 }
 
 .job-container {
-    padding: 1em 0;
+    padding: 1em;
+    border-radius: 1em;
 }
+
+.job-container:target {
+    background-color: lemonchiffon;
+    transition: background-color .2s ease-in;
+} 
 
 .job-head {
     display: flex;

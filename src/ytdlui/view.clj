@@ -57,6 +57,7 @@
    [:div
     (for [job jobs]
       [:div.job-container
+       {:id (format "job-%s" (:job_id job))}
        [:div.job-head
         [:div.job-status-icon
          {:style (format "background-color: %s;" (status-color (:status job)))}
@@ -64,6 +65,11 @@
                                :src (format "/assets/icons/%s.svg" (status-icon (:status job)))}]]
         [:div [:a {:href (:url job)} (or (:title job) (:url job))]]]
        [:div.job-actions
+        (when (#{"done"} (:status job))
+          [:a
+           {:href (format "/#job-%s" (:job_id job))}
+           [:div.job-action
+            [:img {:src "assets/icons/link.svg"}] "Link"]])
         (when (or (:stdout job) (:stderr job) (:exception job))
           [:a
            {:href (format "/job/%d/logs" (:job_id job))}
