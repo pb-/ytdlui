@@ -13,7 +13,7 @@ COPY src src/
 COPY resources resources/
 
 ARG version=UNKNOWN
-RUN echo "$version" > resources/version
+RUN echo "${version}" | cut -c -7 > resources/version
 
 RUN clojure -T:build uber
 
