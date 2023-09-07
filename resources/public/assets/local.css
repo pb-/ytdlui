@@ -88,6 +88,7 @@ button {
 .job-status-icon {
     padding: 0.5em;
     border-radius: 3em;
+    transition: opacity 1s ease-in;
 }
 
 .job-status-img {

@@ -9,6 +9,7 @@
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.middleware.content-type :refer [wrap-content-type]]
             [ring.middleware.not-modified :refer [wrap-not-modified]]
+            [ring.middleware.gzip :refer [wrap-gzip]]
             [compojure.core :refer [GET POST defroutes]]
             [ytdlui.store :as store]
             [ytdlui.view :as view]))
@@ -56,10 +57,7 @@
   (fn [request]
     {:status 200
      :headers {"content-type" "text/html; charset=utf-8"}
-     :body (view/page
-             (handler request)
-             version
-             (store/working? (:db request)))}))
+     :body (view/page (handler request) version)}))
 
 (defn logs [request]
   (view/logs (store/get-job (:db request) (get-in request [:params :job-id]))))
@@ -102,9 +100,17 @@
     "retry" retry
     not-found))
 
+(defn job-fragment [request]
+  (let [job (store/get-job (:db request) (get-in request [:params :job-id]))
+        icon-visible? (= (get-in request [:params "icon-visible"]) "true")]
+    (if job
+      (view/fragment (view/job-container job icon-visible?))
+      not-found)))
+
 (defroutes routes
   (GET "/" [] (wrap-html-content home))
   (POST "/" [] dispatch-mutation)
+  (GET ["/job/:job-id" :job-id #"\d+"] [] job-fragment)
   (GET ["/job/:job-id/download/:display-name" :job-id #"\d+" :display-name #".*"] [] download-local)
   (GET ["/job/:job-id/logs" :job-id #"\d+"] [] (wrap-html-content logs))
   not-found)
@@ -115,7 +121,8 @@
       wrap-content-type
       wrap-not-modified
       wrap-db
-      wrap-params))
+      wrap-params
+      wrap-gzip))
 
 (defn run-job [db job]
   (try
