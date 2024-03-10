@@ -107,3 +107,8 @@ button {
     align-items: center;
     gap: .2em;
 }
+
+.job-action img {
+    width: 1em;
+    height: 1em;
+}
