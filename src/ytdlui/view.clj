@@ -7,13 +7,15 @@
   {"pending" "gray"
    "done" "mediumseagreen"
    "error" "indianred"
-   "running" "darkslateblue"})
+   "running" "darkslateblue"
+   "archived" "darkgoldenrod"})
 
 (def ^:private status-icon
   {"pending" "hourglass"
    "done" "check"
    "error" "cancel"
-   "running" "cloud-download"})
+   "running" "cloud-download"
+   "archived" "archive"})
 
 (defn page [body version]
   (html5
@@ -63,7 +65,7 @@
                              :src (format "/assets/icons/%s.svg" (status-icon (:status job)))}]]
       [:div [:a {:href (:url job)} (or (:title job) (:url job))]]]
      [:div.job-actions
-      (when (#{"done"} (:status job))
+      (when (#{"done" "archived"} (:status job))
         [:a
          {:href (format "/#job-%s" (:job_id job))}
          [:div.job-action

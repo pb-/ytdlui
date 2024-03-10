@@ -54,6 +54,15 @@
                      updated_at = ?
                      WHERE status = 'error' AND job_id = ?" timestamp job-id]))
 
+(defn archive! [db timestamp threshold]
+  (jdbc/execute! db ["UPDATE job SET
+                     status = 'archived',
+                     updated_at = ?
+                     WHERE status = 'done' AND created_at < ?" timestamp threshold]))
+
+(defn list-archivable [db threshold]
+  (jdbc/query db ["SELECT job_id, filename FROM job WHERE status = 'done' AND created_at < ?" threshold]))
+
 (defn list-jobs [db]
   (jdbc/query db "SELECT * FROM job ORDER BY created_at DESC"))
 

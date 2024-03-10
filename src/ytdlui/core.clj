@@ -22,6 +22,13 @@
               :subprotocol "sqlite"
               :subname db-path})
 
+(def archive-threshold-seconds
+  (* 30 ;; days
+     24 ;; hours
+     60 ;; minutes
+     60 ;; seconds
+    ))
+
 (def rfc-3986-unreserved "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~")
 
 (def version (slurp (io/resource "version")))
@@ -49,6 +56,13 @@
       (merge result (metadata (:out result)))
       result)))
 
+(defn archive! [db]
+  (let [threshold (- (now) archive-threshold-seconds)
+        jobs (store/list-archivable db threshold)]
+    (doseq [job jobs]
+      (io/delete-file (str downloads-path \/ (:filename job)) true))
+    (store/archive! db (now) threshold)))
+
 (defn not-found [& request]
   {:status 404
    :body "Not here"})
@@ -63,6 +77,7 @@
   (view/logs (store/get-job (:db request) (get-in request [:params :job-id]))))
 
 (defn home [request]
+  (archive! (:db request))
   (view/home (store/list-jobs (:db request))))
 
 (defn wrap-db [handler]
