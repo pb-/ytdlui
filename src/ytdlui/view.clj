@@ -80,7 +80,7 @@
          {:href (format "/job/%d/download/%s" (:job_id job) (:filename job))}
          [:div.job-action
           [:img {:src "assets/icons/download.svg"}] "Download"]])
-      (when (#{"error"} (:status job))
+      (when (#{"error" "archived"} (:status job))
         [:form
          {:method "post" :action ""}
          [:input {:type "hidden" :name "action" :value "retry"}]
@@ -88,7 +88,10 @@
          [:button
           {:type "submit"}
           [:div.job-action
-           [:img {:src "assets/icons/refresh.svg"}] "Retry"]]])]]))
+           [:img {:src "assets/icons/refresh.svg"}]
+           (case (:status job)
+             "archived" "Get again"
+             "error" "Retry")]]])]]))
 
 (defn fragment [element]
   (html element))
