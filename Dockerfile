@@ -18,7 +18,7 @@ RUN echo "${version}" | cut -c -7 > resources/version
 RUN clojure -T:build uber
 
 # ======================================================================================
-FROM debian:11.2-slim
+FROM debian:12-slim
 
 RUN apt-get update && apt-get install -y python3 python3-venv openjdk-17-jre-headless ffmpeg
 
