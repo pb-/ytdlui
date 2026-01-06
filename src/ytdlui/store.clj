@@ -54,11 +54,10 @@
                      updated_at = ?
                      WHERE status IN ('error', 'archived') AND job_id = ?" timestamp job-id]))
 
-(defn archive! [db timestamp threshold]
+(defn archive! [db threshold]
   (jdbc/execute! db ["UPDATE job SET
-                     status = 'archived',
-                     updated_at = ?
-                     WHERE status = 'done' AND coalesce(updated_at, created_at) < ?" timestamp threshold]))
+                     status = 'archived'
+                     WHERE status = 'done' AND coalesce(updated_at, created_at) < ?" threshold]))
 
 (defn list-archivable [db threshold]
   (jdbc/query db ["SELECT job_id, filename FROM job WHERE status = 'done' AND coalesce(updated_at, created_at) < ?" threshold]))

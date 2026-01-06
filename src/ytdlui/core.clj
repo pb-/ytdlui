@@ -61,7 +61,7 @@
         jobs (store/list-archivable db threshold)]
     (doseq [job jobs]
       (io/delete-file (str downloads-path \/ (:filename job)) true))
-    (store/archive! db (now) threshold)))
+    (store/archive! db threshold)))
 
 (defn not-found [& request]
   {:status 404
