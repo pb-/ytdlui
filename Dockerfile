@@ -21,7 +21,11 @@ RUN clojure -T:build uber
 # trixie-slim
 FROM debian@sha256:b6e2a152f22a40ff69d92cb397223c906017e1391a73c952b588e51af8883bf8
 
-RUN apt-get update && apt-get install -y python3 python3-venv openjdk-25-jre-headless ffmpeg
+RUN apt-get update && apt-get install -y python3 python3-venv openjdk-25-jre-headless ffmpeg curl unzip
+RUN curl -sL https://github.com/denoland/deno/releases/download/v2.8.1/deno-x86_64-unknown-linux-gnu.zip > /tmp/deno.zip && \
+    unzip -p /tmp/deno.zip > /usr/bin/deno && \
+    chmod a+x /usr/bin/deno && \
+    rm /tmp/deno.zip
 
 WORKDIR /app
 VOLUME /app/data

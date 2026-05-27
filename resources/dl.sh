@@ -2,6 +2,9 @@
 
 set -eo pipefail
 
+# deno...
+HOME=/tmp
+
 if [ $# -ne 1 ] && [ $# -ne 2 ]
 then
     echo "usage: $0 URL [OUTPUT_DIR]"
@@ -43,7 +46,7 @@ download() {
     fi
 
     echo "timestamp is $(date -Is)"
-    if e/bin/yt-dlp --flat-playlist -x --audio-quality=0 --no-simulate -O 'id: %(id)s' -O 'title: %(title)s' -O 'original_url: %(original_url)s' --exec echo --newline --no-colors "$URL" | tee log; then
+    if e/bin/yt-dlp --js-runtimes deno:/usr/bin/deno --flat-playlist -x --audio-quality=0 --no-simulate -O 'id: %(id)s' -O 'title: %(title)s' -O 'original_url: %(original_url)s' --exec echo --newline --no-colors "$URL" | tee log; then
         echo "yt-dlp finished successfully"
     else
         if [ "$REUSE_WORKDIR" -eq 1 ]; then
