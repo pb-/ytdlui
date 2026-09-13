@@ -5,6 +5,7 @@
             [clojure.stacktrace :refer [print-stack-trace]]
             [clojure.string :as string]
             [ring.adapter.jetty :refer [run-jetty]]
+            [ring.util.response :refer [file-response]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.middleware.content-type :refer [wrap-content-type]]
@@ -88,12 +89,7 @@
 (defn download-local [request]
   (let [job (store/get-job (:db request) (get-in request [:params :job-id]))]
     (if (and job (#{"done"} (:status job)))
-      (let [file (io/file (str downloads-path "/" (:filename job)))]
-        {:status 200
-         :headers {"content-type" "application/octet-stream"
-                   "content-length" (str (.length file))
-                   "content-disposition" (str "attachment; filename*=UTF-8''" (url-encode (:filename job)))}
-         :body file})
+      (file-response (str downloads-path "/" (:filename job)))
       (not-found))))
 
 (defn enqueue [request]
